@@ -93,6 +93,57 @@ def generate_password(
 
     return "".join(password_chars) # Corrected line
 
+
+def check_password_strength(password: str) -> str:
+    """
+    Checks the strength of a given password based on length and character types.
+
+    Criteria:
+    - Weak:
+        - Length < 8
+        - OR (Length >= 8 AND < 3 character types: uppercase, lowercase, digits, symbols)
+    - Medium:
+        - 8 <= Length <= 11
+        - AND >= 3 character types
+    - Strong:
+        - Length >= 12
+        - AND all 4 character types are present.
+    """
+    length = len(password)
+    has_upper = False
+    has_lower = False
+    has_digit = False
+    has_symbol = False
+
+    for char in password:
+        if char in string.ascii_uppercase:
+            has_upper = True
+        elif char in string.ascii_lowercase:
+            has_lower = True
+        elif char in string.digits:
+            has_digit = True
+        elif char in string.punctuation: # string.punctuation covers common symbols
+            has_symbol = True
+
+    char_types_count = sum([has_upper, has_lower, has_digit, has_symbol])
+
+    # Criteria from subtask:
+    # - Strong: Length 12+ AND all 4 character types.
+    # - Medium: Length 8-11 AND >=3 character types.
+    # - Weak: Otherwise.
+
+    if length >= 12 and char_types_count == 4:
+        return "Strong"
+    elif 8 <= length <= 11 and char_types_count >= 3:
+        return "Medium"
+    else:
+        # Weak if:
+        # - Length < 8
+        # - OR (Length >= 8 AND < 3 character types)
+        # - OR (Length >= 12 AND < 4 character types) and not Medium
+        # - OR (Length 8-11 AND < 3 character types) and not Medium
+        return "Weak"
+
 def main():
     """
     Main function to run the console-based password generator application.
@@ -200,7 +251,9 @@ def main():
                             use_symbols=character_options_config["symbols"]["include"],
                             num_symbols=character_options_config["symbols"]["count"]
                         )
-                        print(f"\nGenerated Password: {password_str}\n")
+                        print(f"\nGenerated Password: {password_str}")
+                        strength = check_password_strength(password_str)
+                        print(f"Password Strength: {strength}\n")
                         break # Success, exit character criteria loop
                     except ValueError as e:
                         print(f"\nError during password generation: {e}")
@@ -212,6 +265,24 @@ def main():
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
 
+        # Option to check strength of an existing password
+        while True:
+            check_existing_choice = input("Do you want to check the strength of an existing password? (yes/no): ").strip().lower()
+            if check_existing_choice in ['yes', 'y']:
+                existing_password = input("Enter the password to check: ").strip()
+                if not existing_password:
+                    print("Password input cannot be empty.")
+                else:
+                    strength = check_password_strength(existing_password)
+                    print(f"Password Strength: {strength}")
+                print("-" * 60) # Separator after checking
+                break # Exit this small loop and proceed to "generate another"
+            elif check_existing_choice in ['no', 'n']:
+                break # Exit this small loop and proceed to "generate another"
+            else:
+                print("Invalid input. Please type 'yes' or 'no'.")
+        
+        # Ask if user wants to generate another password
         while True:
             another_choice = input("Generate another password? (yes/no): ").strip().lower()
             if another_choice in ['yes', 'y', 'no', 'n']:
